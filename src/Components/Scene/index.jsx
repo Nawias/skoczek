@@ -2,17 +2,27 @@ import React, {useEffect, useRef} from 'react';
 import {MatterScene} from "./styles";
 import Matter from "matter-js";
 
-function Scene(props){
+const loadSvg = function(url,sampleLength) {
+  return fetch(url)
+    .then(function(response) { return response.text(); })
+    .then(function(raw) { return (new window.DOMParser()).parseFromString(raw, 'image/svg+xml'); })
+    .then(function (raw) {
+      return Array.from(raw.getElementsByTagName('path')).map((path) => Matter.Svg.pathToVertices(path,sampleLength))
+    })
+};
+
+const Scene = (props) => {
   const boxRef = useRef(null)
   const canvasRef = useRef(null)
 
   const vertices = useRef([]);
 
-  useEffect(() => {
+  useEffect(async () => {
     let Engine = Matter.Engine
     let Render = Matter.Render
     let World = Matter.World
     let Bodies = Matter.Bodies
+    let Body = Matter.Body
 
     let engine = Engine.create({})
 
@@ -21,28 +31,30 @@ function Scene(props){
       engine: engine,
       canvas: canvasRef.current,
       options: {
-        width: 700,
-        height: 700,
-        background: 'black',
+        width: 1280,
+        height: 720,
+        background: 'grey',
         wireframes: false,
       },
     })
 
-    const floor = Bodies.rectangle(350, 700, 700, 5, {
-      isStatic: true,
-      render: {
-        fillStyle: 'white',
-      },
-    })
-
-    const ball = Bodies.circle(150, 0, 10, {
+    const ball = Bodies.circle(284, 427, 3, {
       restitution: 0.9,
       render: {
-        fillStyle: 'white',
+        fillStyle: 'red',
       },
     })
 
-    World.add(engine.world, [floor, ball])
+    const jumpPad = await loadSvg("skocznia.svg",15)
+    const slide = Bodies.fromVertices(385,595,jumpPad,{
+      isStatic: true,
+      render: {
+        fillStyle: '#d2aa5555'
+      }
+    })
+    Body.scale(slide,1.5,1.5)
+
+    World.add(engine.world, [slide,ball])
 
     Engine.run(engine)
     Render.run(render)
