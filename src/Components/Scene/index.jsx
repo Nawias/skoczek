@@ -1,6 +1,12 @@
 import React, {useEffect, useRef} from 'react';
 import {MatterScene} from "./styles";
 import Matter from "matter-js";
+const Engine = Matter.Engine
+const Runner = Matter.Runner
+const Render = Matter.Render
+const World = Matter.World
+const Bodies = Matter.Bodies
+const Body = Matter.Body
 
 const loadSvg = function(url,sampleLength) {
   return fetch(url)
@@ -11,37 +17,24 @@ const loadSvg = function(url,sampleLength) {
     })
 };
 
-const Scene = (props) => {
+const Scene = ({props}) => {
   const boxRef = useRef(null)
   const canvasRef = useRef(null)
-
-  const vertices = useRef([]);
+  const engine = useRef(null);
+  const render = useRef(null);
 
   useEffect(async () => {
-    let Engine = Matter.Engine
-    let Render = Matter.Render
-    let World = Matter.World
-    let Bodies = Matter.Bodies
-    let Body = Matter.Body
+    engine.current = Engine.create({})
 
-    let engine = Engine.create({})
-
-    let render = Render.create({
+    render.current = Render.create({
       element: boxRef.current,
-      engine: engine,
+      engine: engine.current,
       canvas: canvasRef.current,
       options: {
         width: 1280,
         height: 720,
         background: 'grey',
         wireframes: false,
-      },
-    })
-
-    const ball = Bodies.circle(284, 427, 3, {
-      restitution: 0.9,
-      render: {
-        fillStyle: 'red',
       },
     })
 
@@ -53,19 +46,24 @@ const Scene = (props) => {
       }
     })
     Body.scale(slide,1.5,1.5)
+    slide.friction = 0.2;
+    World.add(engine.current.world, [slide])
 
-    World.add(engine.world, [slide,ball])
-
-    Engine.run(engine)
-    Render.run(render)
+    const runner = Runner.create();
+    Runner.run(runner,engine.current)
+    Render.run(render.current)
   }, [])
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    vertices.current.push({x,y});
-    console.log(vertices.current)
+
+    const jumperVerts = await loadSvg("skoczek.svg",1);
+    const jumper = Bodies.fromVertices(x,y,jumperVerts,{},false,0.000001,0.00001);
+
+    jumper.friction = 0.008;
+    Matter.World.add(engine.current.world, jumper)
   }
 
   return (
