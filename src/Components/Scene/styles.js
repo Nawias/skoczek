@@ -4,3 +4,6 @@ export const MatterScene = styled.div`
   width: 1280px;
   height: 720px;
 `
+export const StartButton = styled.button`
+
+`
