@@ -22,8 +22,8 @@ function App() {
   const [windForce3, setWindForce3] = useState({x:0.02,y:0.015});
   return (
     <AppContainer>
-      <InputGroup initialSpeed={initialSpeed} setInitialSpeed={setInitialSpeed} jumpForce={jumpForce}  setJumpForce={setJumpForce} windForce1={windForce1}  setWindForce1={setWindForce1} windForce2={windForce2}  setWindForce2={setWindForce2} windForce3={windForce3}  setWindForce3={setWindForce3} />
-      <Scene initialSpeed={initialSpeed} jumpForce={jumpForce} windForce1={windForce1} windForce2={windForce2} windForce3={windForce3} />
+      <InputGroup initialSpeed={initialSpeed} setInitialSpeed={setInitialSpeed} jumpForce={jumpForce} setJumpForce={setJumpForce} windForce1={windForce1}  setWindForce1={setWindForce1} windForce2={windForce2}  setWindForce2={setWindForce2} windForce3={windForce3}  setWindForce3={setWindForce3} />
+      <Scene initialSpeed={initialSpeed} jumpForce={jumpForce} windVector1={windForce1} windVector2={windForce2} windVector3={windForce3} />
     </AppContainer>
   );
 }

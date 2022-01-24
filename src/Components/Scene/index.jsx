@@ -48,98 +48,104 @@ const Scene = ({
     return jumper;
   }
 
-  useEffect(async () => {
-    engine.current = Engine.create({})
-    engine.current.timing.timeScale = 1
-    render.current = Render.create({
-      element: boxRef.current,
-      engine: engine.current,
-      canvas: canvasRef.current,
-      options: {
-        width: 1280,
-        height: 720,
-        background: 'grey',
-        wireframes: false,
-        hasBounds:true,
-      },
-    })
-    runner.current = Runner.create();
+  useEffect(() => {
+    async function setup() {
+      engine.current = Engine.create({})
+      engine.current.timing.timeScale = 1
+      render.current = Render.create({
+        element: boxRef.current,
+        engine: engine.current,
+        canvas: canvasRef.current,
+        options: {
+          width: 1280,
+          height: 720,
+          background: 'grey',
+          wireframes: false,
+          hasBounds: true,
+        },
+      })
+      runner.current = Runner.create();
 
-    /** Environment */
-    const jumpPad = await loadSvg("skocznia.svg",30)
-    const slide = Bodies.fromVertices(630,1180,jumpPad,{
-      isStatic: true,
-      render: {
-        fillStyle: '#d2aa55'
-      }
-    })
-    Body.scale(slide,3.5,3.5)
-    slide.friction = 0.2;
-    /** */
-
-    /** Force triggers */
-    const wind1 = Bodies.rectangle(515,720,300,1440,{
-      isSensor: true,
-      isStatic: true,
-      render: {
-        fillStyle: '#66a0de55'
-      }
-    })
-
-    const wind2 = Bodies.rectangle(815,720,300,1440,{
-      isSensor: true,
-      isStatic: true,
-      render: {
-        fillStyle: '#88b0ed55'
-      }
-    })
-
-    const wind3 = Bodies.rectangle(1115,720,300,1440,{
-      isSensor: true,
-      isStatic: true,
-      render: {
-        fillStyle: '#a0c0f055'
-      }
-    })
-
-    windRefs.current = [wind1, wind2, wind3];
-    /** */
-
-    jumperRef.current = setupJumper();
-    const jumper = jumperRef.current;
-
-
-    World.add(engine.current.world, [slide, wind1,wind2,wind3,jumperRef.current])
-
-    Render.run(render.current)
-
-    Render.lookAt(render.current,{x:1200,y:550}, {x:1600,y:900},);
-
-    Events.on(runner.current, "tick", ()=>{
-      const collisions = Query.collides(jumper, windRefs.current)
-      collisions.forEach(collision => {
-        if(collision.bodyA.id === windRefs.current[0].id){
-          //{x:-0.00008, y:-0.001}
-          Body.applyForce(jumper,jumper.position, {x:windVector1.x/collisions.length, y:windVector1.y/collisions.length})
-        }
-        if(collision.bodyA.id === windRefs.current[1].id){
-          //{x:0.0002, y:-0.0005}
-          Body.applyForce(jumper,jumper.position, {x:windVector2.x/collisions.length, y:windVector2.y/collisions.length})
-        }
-        if(collision.bodyA.id === windRefs.current[2].id){
-          //{x:0.0003, y:-0.0013}
-          Body.applyForce(jumper,jumper.position, {x:windVector3.x/collisions.length, y:windVector3.y/collisions.length})
+      /** Environment */
+      const jumpPad = await loadSvg("skocznia.svg", 30)
+      const slide = Bodies.fromVertices(630, 1180, jumpPad, {
+        isStatic: true,
+        render: {
+          fillStyle: '#d2aa55'
         }
       })
-    })
+      Body.scale(slide, 3.5, 3.5)
+      slide.friction = 0.2;
+      /** */
+
+      /** Force triggers */
+      const wind1 = Bodies.rectangle(515, 720, 300, 1440, {
+        isSensor: true,
+        isStatic: true,
+        render: {
+          fillStyle: '#66a0de55'
+        }
+      })
+
+      const wind2 = Bodies.rectangle(815, 720, 300, 1440, {
+        isSensor: true,
+        isStatic: true,
+        render: {
+          fillStyle: '#88b0ed55'
+        }
+      })
+
+      const wind3 = Bodies.rectangle(1115, 720, 300, 1440, {
+        isSensor: true,
+        isStatic: true,
+        render: {
+          fillStyle: '#a0c0f055'
+        }
+      })
+
+      windRefs.current = [wind1, wind2, wind3];
+      /** */
+
+      jumperRef.current = setupJumper();
+
+
+      World.add(engine.current.world, [slide, wind1, wind2, wind3, jumperRef.current])
+
+      Render.run(render.current)
+
+      Render.lookAt(render.current, {x: 1200, y: 550}, {x: 1600, y: 900},);
+
+      Events.on(runner.current, "tick", () => {
+        const collisions = Query.collides(jumperRef.current, windRefs.current)
+        collisions.forEach(collision => {
+          let forceVector = {x:0,y:0}
+          if (collision.bodyA.id === windRefs.current[0].id) {
+            forceVector = {
+              x: windVector1.x / collisions.length,
+              y: windVector1.y / collisions.length
+            }
+          }
+          if (collision.bodyA.id === windRefs.current[1].id) {
+            forceVector = {
+              x: windVector2.x / collisions.length,
+              y: windVector2.y / collisions.length
+            }
+          }
+          if (collision.bodyA.id === windRefs.current[2].id) {
+            forceVector = {
+              x: windVector3.x / collisions.length,
+              y: windVector3.y / collisions.length
+            }
+          }
+          console.log(forceVector)
+          Body.applyForce(jumperRef.current, jumperRef.current.position, forceVector)
+        })
+      })
+    }
+    setup();
     return () => {
       Matter.Runner.stop(runner.current);
       Matter.Render.stop(render.current);
-
-      render.canvas.remove();
-      render.canvas = null;
-      render.context = null;
-      render.textures = {};
 
       Matter.World.clear(engine.current.world);
       Matter.Engine.clear(engine.current);
